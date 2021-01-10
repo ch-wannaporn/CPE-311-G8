@@ -15,15 +15,15 @@ int main()
 {
 	SystemClock_Config();
 	
-	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
+	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOD);
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
 	
 	LL_GPIO_InitTypeDef GPIO_Init;
 	
 	GPIO_Init.Mode = LL_GPIO_MODE_INPUT;
-	GPIO_Init.Pin = LL_GPIO_PIN_1;
+	GPIO_Init.Pin = LL_GPIO_PIN_2;
 	GPIO_Init.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
-	LL_GPIO_Init(GPIOA, &GPIO_Init);
+	LL_GPIO_Init(GPIOD, &GPIO_Init);
 	
 	GPIO_Init.Mode = LL_GPIO_MODE_OUTPUT;
 	GPIO_Init.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
@@ -33,7 +33,7 @@ int main()
 
 	while(1)
 	{
-		if(!LL_GPIO_IsInputPinSet(GPIOA, LL_GPIO_PIN_1))
+		if(!LL_GPIO_IsInputPinSet(GPIOD, LL_GPIO_PIN_2))
 		{
 			LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_6);
 		}
