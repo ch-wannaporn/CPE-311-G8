@@ -25,6 +25,7 @@ uint8_t disp[3];
 uint8_t Green = ON;
 uint8_t Yellow = OFF;
 uint8_t Red = OFF;
+uint8_t input = 1;
 
 uint32_t seg[10]={LL_GPIO_PIN_2 | LL_GPIO_PIN_10 | LL_GPIO_PIN_11 | LL_GPIO_PIN_12 | LL_GPIO_PIN_13 | LL_GPIO_PIN_14,
 									LL_GPIO_PIN_10 | LL_GPIO_PIN_11,
@@ -50,10 +51,14 @@ int main()
 		if (Green == ON)
 		{
 			LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_11);
-			while(LL_GPIO_IsInputPinSet(GPIOD, LL_GPIO_PIN_2));
-			Green = OFF;
-			Yellow = ON;
-			i = 6;
+			input = LL_GPIO_IsInputPinSet(GPIOD, LL_GPIO_PIN_2);
+			if(!input)
+			{
+				Green = OFF;
+				Yellow = ON;
+				i = 6;
+				input = 1;
+			}
 		}
 		
 		if (Yellow == ON)
@@ -143,12 +148,6 @@ void GPIO_Config()
 	GPIO_Init.Pin = LL_GPIO_PIN_2;
 	GPIO_Init.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
 	LL_GPIO_Init(GPIOD, &GPIO_Init);
-	
-	GPIO_Init.Mode = LL_GPIO_MODE_OUTPUT;
-	GPIO_Init.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-	GPIO_Init.Pin = LL_GPIO_PIN_6;
-	GPIO_Init.Pull = LL_GPIO_PULL_NO;
-	LL_GPIO_Init(GPIOB, &GPIO_Init);
 	
 	ltc4727_initstruct.Mode = LL_GPIO_MODE_OUTPUT;
 	ltc4727_initstruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
