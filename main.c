@@ -19,6 +19,7 @@ void TIM_OC_Config(void);
 void showCount(uint8_t c);
 void reset7Seg(void);
 void setSpeaker(void);
+void TIM_IC_Config(void);
 
 #define ON 1
 #define OFF 0
@@ -49,7 +50,7 @@ uint16_t ptime = 0;
 
 uint8_t state = 0;
 float period = 0;
-uint32_t TIM2CLK;
+uint32_t TIM3CLK;
 uint32_t PSC;
 uint32_t IC1PSC;
 
@@ -72,10 +73,33 @@ int main()
 	GPIO_Config();
 	TIMBase_Config();
 	TIM_OC_Config();
+	TIM_IC_Config();
 	
 	while(1)
 	{
-		input = LL_GPIO_IsInputPinSet(GPIOD, LL_GPIO_PIN_2);
+			if(state == 1) {
+				state = 0;
+				if(fall_timestamp < rise_timestamp)
+				{
+					downtime = rise_timestamp - fall_timestamp;
+				}
+				else if(fall_timestamp > rise_timestamp)
+				{
+					downtime = ((LL_TIM_GetAutoReload(TIM3) - fall_timestamp) + rise_timestamp) + 1;
+				}
+		
+				period = downtime / 10000.0 * 10.0;
+				
+				if(period > 5)
+				{
+					input = 0;
+				}
+				else
+				{
+					input = 1;
+				}
+			}
+		
 		if (Red == ON)
 		{
 			LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_12);
@@ -286,6 +310,74 @@ void TIM4_IRQHandler(void)
 	if(LL_TIM_IsActiveFlag_CC1(TIM4) == SET)
 	{
 		LL_TIM_ClearFlag_CC1(TIM4);
+	}
+}
+
+void TIM_IC_Config(void)
+{
+	LL_GPIO_InitTypeDef timic_gpio;
+	LL_TIM_IC_InitTypeDef timic;
+	LL_TIM_InitTypeDef timbase_initstructure;
+	
+	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOC);
+
+	timic_gpio.Mode = LL_GPIO_MODE_ALTERNATE;
+	timic_gpio.Pin = LL_GPIO_PIN_8 | LL_GPIO_PIN_9;
+	timic_gpio.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
+	timic_gpio.Alternate = LL_GPIO_AF_2;
+	LL_GPIO_Init(GPIOC, &timic_gpio);
+
+	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM3);
+	
+	timbase_initstructure.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
+	timbase_initstructure.CounterMode = LL_TIM_COUNTERMODE_UP;
+	timbase_initstructure.Autoreload = 10000-1;
+	timbase_initstructure.Prescaler = 32000-1;
+	
+	LL_TIM_Init(TIM3, &timbase_initstructure);
+
+	//TIM_IC Configure CH3
+	timic.ICActiveInput = LL_TIM_ACTIVEINPUT_DIRECTTI;
+	timic.ICFilter = LL_TIM_IC_FILTER_FDIV1;
+	timic.ICPolarity = LL_TIM_IC_POLARITY_RISING;
+	timic.ICPrescaler = LL_TIM_ICPSC_DIV1;
+	LL_TIM_IC_Init(TIM3, LL_TIM_CHANNEL_CH3, &timic);
+
+	//TIM_IC Configure CH4
+	timic.ICPolarity = LL_TIM_IC_POLARITY_FALLING;
+	LL_TIM_IC_Init(TIM3, LL_TIM_CHANNEL_CH4, &timic);
+
+	NVIC_SetPriority(TIM3_IRQn, 0);
+	NVIC_EnableIRQ(TIM3_IRQn);
+
+	LL_TIM_EnableIT_CC3(TIM3);
+	LL_TIM_EnableIT_CC4(TIM3);
+
+	LL_TIM_CC_EnableChannel(TIM3, LL_TIM_CHANNEL_CH3);
+	LL_TIM_CC_EnableChannel(TIM3, LL_TIM_CHANNEL_CH4);
+
+	LL_TIM_EnableCounter(TIM3);
+}
+
+void TIM3_IRQHandler(void)
+{  
+	if(LL_TIM_IsActiveFlag_CC3(TIM3) == SET)
+	{
+		LL_TIM_ClearFlag_CC3(TIM3);
+		rise_timestamp = LL_TIM_IC_GetCaptureCH3(TIM3);
+		if (state == 0)
+		{
+			state = 1;
+		}
+		else
+		{
+			state = 0;
+		}
+	}
+	if(LL_TIM_IsActiveFlag_CC4(TIM3) == SET)
+	{
+			LL_TIM_ClearFlag_CC4(TIM3);
+			fall_timestamp = LL_TIM_IC_GetCaptureCH4(TIM3);
 	}
 }
 
