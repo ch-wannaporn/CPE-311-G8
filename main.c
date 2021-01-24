@@ -11,16 +11,6 @@
 #include "stm32l1xx_ll_lcd.h"
 #include "stm32l152_glass_lcd.h"
 
-void SystemClock_Config(void);
-void GPIO_Config(void);
-void TIMBase_Config(void);
-void TIM_BASE_NOTE_Config(void);
-void TIM_OC_Config(void);
-void showCount(uint8_t c);
-void reset7Seg(void);
-void setSpeaker(void);
-void TIM_IC_Config(void);
-
 #define ON 1
 #define OFF 0
 
@@ -67,6 +57,17 @@ uint32_t seg[10]={LL_GPIO_PIN_2 | LL_GPIO_PIN_10 | LL_GPIO_PIN_11 | LL_GPIO_PIN_
 
 uint32_t digit[4] = {LL_GPIO_PIN_0 , LL_GPIO_PIN_1 , LL_GPIO_PIN_2 , LL_GPIO_PIN_3};
 
+void SystemClock_Config(void);
+void GPIO_Config(void);
+void TIMBase_Config(void);
+void TIM_BASE_NOTE_Config(void);
+void TIM_OC_Config(void);
+void showCount(uint8_t c);
+void reset7Seg(void);
+void setSpeaker(void);
+void TIM_IC_Config(void);
+void setInput(void);
+
 int main()
 {
 	SystemClock_Config();
@@ -77,28 +78,7 @@ int main()
 	
 	while(1)
 	{
-			if(state == 1) {
-				state = 0;
-				if(fall_timestamp < rise_timestamp)
-				{
-					downtime = rise_timestamp - fall_timestamp;
-				}
-				else if(fall_timestamp > rise_timestamp)
-				{
-					downtime = ((LL_TIM_GetAutoReload(TIM3) - fall_timestamp) + rise_timestamp) + 1;
-				}
-		
-				period = downtime / 10000.0 * 10.0;
-				
-				if(period > 5)
-				{
-					input = 0;
-				}
-				else
-				{
-					input = 1;
-				}
-			}
+		setInput();
 		
 		if (Red == ON)
 		{
@@ -145,6 +125,31 @@ int main()
 			}
 		}
 	}
+}
+
+void setInput(void){
+		if(state == 1) {
+			state = 0;
+				if(fall_timestamp < rise_timestamp)
+				{
+					downtime = rise_timestamp - fall_timestamp;
+				}
+				else if(fall_timestamp > rise_timestamp)
+				{
+					downtime = ((LL_TIM_GetAutoReload(TIM3) - fall_timestamp) + rise_timestamp) + 1;
+				}
+		
+			period = downtime / 10000.0 * 10.0;
+				
+				if(period > 5)
+				{
+					input = 0;
+				}
+				else
+				{
+					input = 1;
+				}
+		}	
 }
 
 void setSpeaker(void){
