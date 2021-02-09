@@ -24,7 +24,6 @@
 #define ARR_CALCULATE(N) ((32000000) / ((TIMx_PSC) * (N)))
 
 uint8_t i;
-uint8_t j = 5;
 uint8_t disp[3];
 uint8_t Green = OFF;
 uint8_t Yellow = OFF;
@@ -88,7 +87,6 @@ int main()
 				Red = OFF;
 				Yellow = ON;
 				i = 6;
-				input = 1;
 			}
 		}
 		
@@ -121,35 +119,20 @@ int main()
 				reset7Seg();
 				Green = OFF;
 				Red = ON;
-				LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_10 | LL_GPIO_PIN_11 | LL_GPIO_PIN_12);				
+				LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_10 | LL_GPIO_PIN_11 | LL_GPIO_PIN_12);
+				i = 6;
+				input = 1;
 			}
 		}
 	}
 }
 
 void setInput(void){
-		if(state == 1) {
-			state = 0;
-				if(fall_timestamp < rise_timestamp)
-				{
-					downtime = rise_timestamp - fall_timestamp;
-				}
-				else if(fall_timestamp > rise_timestamp)
-				{
-					downtime = ((LL_TIM_GetAutoReload(TIM3) - fall_timestamp) + rise_timestamp) + 1;
-				}
-		
-			period = downtime / 10000.0 * 10.0;
-				
-				if(period > 5)
-				{
-					input = 0;
-				}
-				else
-				{
-					input = 1;
-				}
-		}	
+		if(i==0)
+		{
+			LL_TIM_DisableCounter(TIM2);
+			input = 0;
+		}
 }
 
 void setSpeaker(void){
@@ -368,21 +351,15 @@ void TIM3_IRQHandler(void)
 {  
 	if(LL_TIM_IsActiveFlag_CC3(TIM3) == SET)
 	{
-		LL_TIM_ClearFlag_CC3(TIM3);
-		rise_timestamp = LL_TIM_IC_GetCaptureCH3(TIM3);
-		if (state == 0)
-		{
-			state = 1;
-		}
-		else
-		{
-			state = 0;
-		}
+			LL_TIM_ClearFlag_CC3(TIM3);
+			LL_TIM_DisableCounter(TIM2);
 	}
 	if(LL_TIM_IsActiveFlag_CC4(TIM3) == SET)
 	{
 			LL_TIM_ClearFlag_CC4(TIM3);
-			fall_timestamp = LL_TIM_IC_GetCaptureCH4(TIM3);
+			LL_TIM_EnableCounter(TIM2);
+			fall_timestamp = LL_TIM_GetCounter(TIM2);
+			i = 6;
 	}
 }
 
