@@ -104,12 +104,20 @@ int main()
 				Yellow = OFF;
 				Green = ON;
 				i = 61;
+				
 			}
 		}
 		
 		if (Green == ON)
 		{
 			LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_12);
+			if (i<=10)
+			{
+				if (LL_TIM_GetCounter(TIM2)<500)
+					LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_11);
+				else
+					LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_11);
+			}
 			showCount(i-1);
 			setSpeaker();
 			if(i == 0)
